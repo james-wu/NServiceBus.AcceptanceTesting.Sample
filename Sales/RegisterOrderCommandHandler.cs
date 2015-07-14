@@ -9,21 +9,21 @@ using System.Threading.Tasks;
 
 namespace Sales
 {
-    public class OrderProcessor: IHandleMessages<RegisterOrder>
+    public class RegisterOrderCommandHandler: IHandleMessages<RegisterOrderCommand>
     {
         public IBus Bus { get; set; }
 
-        public void Handle(RegisterOrder message)
+        public void Handle(RegisterOrderCommand message)
         {
             Debug.WriteLine("Received order {0}, processing...", message.OrderId, message.CustomerName);
 
             if (message.Amount <= 500)
             {
-                Bus.Publish<OrderAccepted>(m => m.OrderId = message.OrderId);
+                Bus.Publish<OrderAcceptedEvent>(m => m.OrderId = message.OrderId);
             }
             else
             {
-                Bus.Publish<OrderRefused>(m => m.OrderId = message.OrderId);
+                Bus.Publish<OrderRefusedEvent>(m => m.OrderId = message.OrderId);
             }
         }
     }

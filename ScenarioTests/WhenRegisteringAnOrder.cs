@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Messages;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NServiceBus;
 using NServiceBus.AcceptanceTesting;
@@ -7,17 +8,17 @@ using NServiceBus.AcceptanceTesting.Customization;
 using NServiceBus.Testing;
 using NServiceBus.MessageMutator;
 using NServiceBus.Features;
-using Messages;
+using NUnit.Framework;
 using ScenarioTests.Infrastructure;
 using Shipping;
 using Sales;
 
 namespace ScenarioTests
 {
-    [TestClass]
+    [TestFixture]
     public class WhenRegisteringAnOrder
     {
-        [TestMethod]
+        [Test]
         public void Order_of_500_should_be_accepted_and_shipped()
         {
             var ctx = new Context();
@@ -35,7 +36,7 @@ namespace ScenarioTests
                         }))
                         // As soon as ShippingIsSubscribed (guarded by the first expression), we'll
                         // fire off the test by sending a RegisterOrder command to the Sales endpoint
-                    .When(context => context.ShippingIsSubscribed, bus => bus.Send<RegisterOrder>(m =>
+                    .When(context => context.ShippingIsSubscribed, bus => bus.Send<RegisterOrderCommand>(m =>
                         {
                             m.Amount = 500;
                             m.CustomerName = "John";
@@ -50,7 +51,7 @@ namespace ScenarioTests
                 .Run();
         }
 
-        [TestMethod]
+        [Test]
         public void Order_under_500_should_be_accepted_and_shipped()
         {
             var ctx = new Context();
@@ -68,7 +69,7 @@ namespace ScenarioTests
                         }))
                         // As soon as ShippingIsSubscribed (guarded by the first expression), we'll
                         // fire off the test by sending a RegisterOrder command to the Sales endpoint
-                    .When(context => context.ShippingIsSubscribed, bus => bus.Send<RegisterOrder>(m =>
+                    .When(context => context.ShippingIsSubscribed, bus => bus.Send<RegisterOrderCommand>(m =>
                     {
                         m.Amount = 499;
                         m.CustomerName = "Roy";
@@ -83,7 +84,7 @@ namespace ScenarioTests
                 .Run();
         }
 
-        [TestMethod]
+        [Test]
         public void Order_over_500_should_be_refused_and_not_shipped()
         {
             var ctx = new Context();
@@ -101,7 +102,7 @@ namespace ScenarioTests
                         }))
                         // As soon as ShippingIsSubscribed (guarded by the first expression), we'll
                         // fire off the test by sending a RegisterOrder command to the Sales endpoint
-                    .When(context => context.ShippingIsSubscribed, bus => bus.Send<RegisterOrder>(m =>
+                    .When(context => context.ShippingIsSubscribed, bus => bus.Send<RegisterOrderCommand>(m =>
                     {
                         m.Amount = 501;
                         m.CustomerName = "Udi";
@@ -132,7 +133,7 @@ namespace ScenarioTests
             {
                 EndpointSetup<DefaultServer>()
                     // Makes sure that Shipping subscribes to OrderAccepted event from Sales endpoint
-                    .AddMapping<OrderAccepted>(typeof(Sales));
+                    .AddMapping<OrderAcceptedEvent>(typeof(Sales));
             }
 
             class ShippingInspector : IMutateOutgoingMessages, INeedInitialization
@@ -141,7 +142,7 @@ namespace ScenarioTests
 
                 public object MutateOutgoing(object message)
                 {
-                    if (message is OrderShipped)
+                    if (message is OrderShippedEvent)
                     {
                         Context.OrderIsShipped = true;
                     }
@@ -162,7 +163,7 @@ namespace ScenarioTests
             {
                 EndpointSetup<DefaultServer>()
                     // Makes sure that the RegisterOrder command is mapped to the Sales endpoint
-                    .AddMapping<RegisterOrder>(typeof(Sales));
+                    .AddMapping<RegisterOrderCommand>(typeof(Sales));
             }
 
             class SalesInspector : IMutateOutgoingMessages, INeedInitialization
@@ -171,12 +172,12 @@ namespace ScenarioTests
 
                 public object MutateOutgoing(object message)
                 {
-                    if (message is OrderAccepted)
+                    if (message is OrderAcceptedEvent)
                     {
                         Context.OrderIsAccepted = true;
                     }
 
-                    if (message is OrderRefused)
+                    if (message is OrderRefusedEvent)
                     {
                         Context.OrderIsRefused = true;
                     }

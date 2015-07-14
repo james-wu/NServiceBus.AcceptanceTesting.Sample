@@ -45,8 +45,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Messages.cs" />
+    <Compile Include="OrderAcceptedEvent.cs" />
+    <Compile Include="OrderRefusedEvent.cs" />
+    <Compile Include="OrderShippedEvent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RegisterOrderCommand.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

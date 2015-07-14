@@ -9,15 +9,15 @@ using System.Threading.Tasks;
 
 namespace Shipping
 {
-    public class OrderShipper: IHandleMessages<OrderAccepted>
+    public class OrderAcceptedEventHandler: IHandleMessages<OrderAcceptedEvent>
     {
         public IBus Bus { get; set; }
 
-        public void Handle(OrderAccepted message)
+        public void Handle(OrderAcceptedEvent message)
         {
             Debug.WriteLine("Order accepted... shipping order {0}", message.OrderId);
 
-            Bus.Publish<OrderShipped>(m => m.OrderId = message.OrderId);
+            Bus.Publish<OrderShippedEvent>(m => m.OrderId = message.OrderId);
         }
     }
 }
